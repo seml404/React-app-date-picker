@@ -1,6 +1,7 @@
 import { DateTime } from "luxon";
 let currentDate = DateTime.now();
 const initialState = {
+  showAddEventWindow: false,
   dateToRender: currentDate,
   currentDate: currentDate,
   monthsList: [
@@ -18,6 +19,7 @@ const initialState = {
     "Декабрь",
   ],
   holidaysList: [{ month: 1, days: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] }],
+  daysList: ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"],
 };
 
 const reducer = (state = initialState, action) => {
@@ -39,6 +41,15 @@ const reducer = (state = initialState, action) => {
       } else {
         return state;
       }
+
+    case "TOGGLE_ADD_EVENT_WINDOW":
+      console.log("working");
+      let updatedToggle = !state.showAddEventWindow;
+      return {
+        ...state,
+        showAddEventWindow: updatedToggle,
+      };
+
     default:
       return state;
   }

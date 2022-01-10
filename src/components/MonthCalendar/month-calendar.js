@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
 import { connect } from "react-redux";
+import { toggleAddEventWidow } from "../../store/actions/index";
 
 function MonthCalendar(props) {
-  const { currentDate, monthsList } = props;
+  const { currentDate, monthsList, daysList, toggleAddEventWidow } = props;
 
   console.log(monthsList);
   let { dateToRender } = props;
@@ -17,6 +18,16 @@ function MonthCalendar(props) {
   console.log(calendar);
   let weekCounter = calendar.length / 7;
 
+  function renderDaysList(arr) {
+    return arr.map((item) => {
+      return (
+        <div key={item} className="WeekDayName">
+          {item}
+        </div>
+      );
+    });
+  }
+
   function defineDayClass(day) {
     let dayClass = "DayPicker-Day";
     if (day.weekday > 5) {
@@ -29,30 +40,38 @@ function MonthCalendar(props) {
   }
 
   function isCurrentDay(day) {
-    if (
+    return (
       day.hasSame(currentDate, "year") &&
       day.hasSame(currentDate, "month") &&
       day.hasSame(currentDate, "day")
-    ) {
-      console.log("working" + day.day);
-      return "NumberWrapper ActiveDay";
-    } else {
-      return "NumberWrapper";
-    }
+    );
   }
 
-  function defineMonth(date) {
-    console.log(+date.month - 1);
-    return monthsList[+date.month - 1];
+  function handleDayClick(e, day) {
+    e.stopPropagation();
+    console.log(day);
+    toggleAddEventWidow();
   }
 
   function renderDays(arr, start) {
     let arrOfDays = [];
     for (let i = start, j = 0; j < 7; j++, i++) {
       arrOfDays.push(
-        <div className={defineDayClass(arr[i])} key={arr[i].toString()}>
+        <div
+          className={defineDayClass(arr[i])}
+          key={arr[i].toString()}
+          onClick={(e, day) => handleDayClick(e, arr[i])}
+        >
           <div className="DayWrapper">
-            <div className={isCurrentDay(arr[i])}>{arr[i].day}</div>
+            <div
+              className={
+                isCurrentDay(arr[i])
+                  ? "NumberWrapper ActiveDay"
+                  : "NumberWrapper"
+              }
+            >
+              {arr[i].day}
+            </div>
           </div>
         </div>
       );
@@ -76,8 +95,7 @@ function MonthCalendar(props) {
     <>
       <div className="DayPicker-Months">
         <div className="DayPicker-Month">
-          <div className="DayPicker-Caption">{defineMonth(dateToRender)}</div>
-          <div className="DayPicker-Weekdays"></div>
+          <div className="DayPicker-Weekdays">{renderDaysList(daysList)}</div>
           <div className="DayPicker-Body">{renderWeeks(calendar)}</div>
         </div>
       </div>
@@ -91,7 +109,13 @@ const mapStateToProps = (state) => {
     currentDate: state.currentDate,
     dateToRender: state.dateToRender,
     holidaysList: state.holidaysList,
+    daysList: state.daysList,
+    showAddEventWindow: state.showAddEventWindow,
   };
 };
 
-export default connect(mapStateToProps)(MonthCalendar);
+const mapDispatchToProps = {
+  toggleAddEventWidow,
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(MonthCalendar);
