@@ -1,0 +1,16 @@
+{
+  "events": [
+    {
+      "id": 1,
+      "title": "event 1",
+      "location": "Moscow",
+      "timeStamp": "1641929212"
+    },
+    {
+      "id": 2,
+      "title": "event 2",
+      "location": "Spb",
+      "timeStamp": "1642015612"
+    }
+  ]
+}
