@@ -41,7 +41,6 @@ const reducer = (state = initialState, action) => {
       } else {
         return state;
       }
-
     case "TOGGLE_ADD_EVENT_WINDOW":
       console.log("working");
       let updatedToggle = !state.showAddEventWindow;
@@ -49,7 +48,6 @@ const reducer = (state = initialState, action) => {
         ...state,
         showAddEventWindow: updatedToggle,
       };
-
     default:
       return state;
   }
