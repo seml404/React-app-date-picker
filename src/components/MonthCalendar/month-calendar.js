@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { connect } from "react-redux";
 import { toggleAddEventWidow } from "../../store/actions/index";
+import { DateTime } from "../../services/index";
 
 function MonthCalendar(props) {
   let [eventsPending, setEventsPending] = useState([]);
@@ -41,11 +42,11 @@ function MonthCalendar(props) {
     return dayClass;
   }
 
-  function isCurrentDay(day) {
+  function equalDate(day, comparedDate) {
     return (
-      day.hasSame(currentDate, "year") &&
-      day.hasSame(currentDate, "month") &&
-      day.hasSame(currentDate, "day")
+      day.hasSame(comparedDate, "year") &&
+      day.hasSame(comparedDate, "month") &&
+      day.hasSame(comparedDate, "day")
     );
   }
 
@@ -53,6 +54,18 @@ function MonthCalendar(props) {
     e.stopPropagation();
     console.log(day);
     toggleAddEventWidow();
+  }
+
+  // console.log(DateTime.fromMillis(1647185731000));
+
+  function isBusy(neededDay, schedule) {
+    if (
+      schedule.find((item) => {
+        return equalDate(neededDay, DateTime.fromMillis(+item.timeStamp));
+      })
+    ) {
+      return true;
+    }
   }
 
   function renderDays(arr, start) {
@@ -67,13 +80,23 @@ function MonthCalendar(props) {
           <div className="DayWrapper">
             <div
               className={
-                isCurrentDay(arr[i])
+                equalDate(arr[i], currentDate)
                   ? "NumberWrapper ActiveDay"
                   : "NumberWrapper"
               }
             >
               {arr[i].day}
             </div>
+            {isBusy(arr[i], eventsPending) && (
+              <div className="eventPending" style={{ color: "red" }}>
+                p
+              </div>
+            )}
+            {isBusy(arr[i], eventsConfirmed) && (
+              <div className="eventConfirmed" style={{ color: "blue" }}>
+                c
+              </div>
+            )}
           </div>
         </div>
       );
@@ -93,20 +116,6 @@ function MonthCalendar(props) {
     return arrOfWeeks;
   }
 
-  // let getEvents = useCallback(async () => {
-  //   setEventsPending([]);
-  //   setEventsConfirmed([]);
-  //   console.log("start", eventsPending, eventsConfirmed);
-  //   let first = await fetch(
-  //     `http://localhost:3000/events?timeStamp_gte=${startDay.valueOf()}&timeStamp_lte=${endDay.valueOf()}`
-  //   );
-  //   let res = await first.json();
-  //   console.log(res);
-  //   if (res.length > 0) {
-  //     res.forEach((item) => sortMonthEvents(item));
-  //   }
-  // }, []);
-
   async function getEvents() {
     console.log("start", eventsPending, eventsConfirmed);
     let first = await fetch(
@@ -115,26 +124,24 @@ function MonthCalendar(props) {
     let res = await first.json();
     console.log(res);
     if (res.length > 0) {
-      res.forEach((item) => sortMonthEvents(item));
+      sortMonthEvents(res);
     }
   }
 
-  function sortMonthEvents(ev) {
-    if (ev.type === "pending") {
-      console.log("yeap 1", ev);
-
-      let events = [...eventsPending];
-      events.push(ev);
-      setEventsPending(events);
-      console.log(eventsPending);
-    } else if (ev.type === "confirmed") {
-      console.log("yeap2", ev);
-
-      let events = [...eventsConfirmed];
-      events.push(ev);
-      setEventsConfirmed(events);
-      console.log(eventsConfirmed);
-    }
+  function sortMonthEvents(res) {
+    let pending = [];
+    let confirmed = [];
+    res.forEach((ev) => {
+      if (ev.type === "pending") {
+        console.log("yeap 1", ev);
+        pending.push(ev);
+      } else if (ev.type === "confirmed") {
+        console.log("yeap2", ev);
+        confirmed.push(ev);
+      }
+    });
+    setEventsPending(pending);
+    setEventsConfirmed(confirmed);
   }
 
   useEffect(() => {
@@ -153,7 +160,7 @@ function MonthCalendar(props) {
         </div>
       </div>
       <div>{eventsPending.length}</div>
-      {/* <div>{eventsConfirmed.length}</div> */}
+      <div>{eventsConfirmed.length}</div>
     </>
   );
 }
