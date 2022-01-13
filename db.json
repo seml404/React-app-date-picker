@@ -3,14 +3,34 @@
     {
       "id": 1,
       "title": "event 1",
+      "description": "some description",
       "location": "Moscow",
+      "type": "pending",
       "timeStamp": "1641929212"
     },
     {
       "id": 2,
       "title": "event 2",
+      "description": "some description",
       "location": "Spb",
+      "type": "confirmed",
       "timeStamp": "1642015612"
+    },
+    {
+      "id": 3,
+      "title": "event 3",
+      "description": "some description",
+      "location": "Spb",
+      "type": "confirmed",
+      "timeStamp": "1644687149"
+    },
+    {
+      "id": 4,
+      "title": "event 3",
+      "description": "some description",
+      "location": "Spb",
+      "type": "pending",
+      "timeStamp": "1644687149"
     }
   ]
 }

@@ -1,11 +1,13 @@
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { connect } from "react-redux";
 import { toggleAddEventWidow } from "../../store/actions/index";
 
 function MonthCalendar(props) {
+  let [eventsPending, setEventsPending] = useState([]);
+  let [eventsConfirmed, setEventsConfirmed] = useState([]);
   const { currentDate, monthsList, daysList, toggleAddEventWidow } = props;
 
-  console.log(monthsList);
+  // console.log(monthsList);
   let { dateToRender } = props;
 
   let startDay = dateToRender.startOf("month").startOf("week");
@@ -15,7 +17,7 @@ function MonthCalendar(props) {
   for (let i = startDay; i <= endDay; i = i.plus({ days: 1 })) {
     calendar.push(i);
   }
-  console.log(calendar);
+  // console.log(calendar);
   let weekCounter = calendar.length / 7;
 
   function renderDaysList(arr) {
@@ -91,6 +93,57 @@ function MonthCalendar(props) {
     return arrOfWeeks;
   }
 
+  // let getEvents = useCallback(async () => {
+  //   setEventsPending([]);
+  //   setEventsConfirmed([]);
+  //   console.log("start", eventsPending, eventsConfirmed);
+  //   let first = await fetch(
+  //     `http://localhost:3000/events?timeStamp_gte=${startDay.valueOf()}&timeStamp_lte=${endDay.valueOf()}`
+  //   );
+  //   let res = await first.json();
+  //   console.log(res);
+  //   if (res.length > 0) {
+  //     res.forEach((item) => sortMonthEvents(item));
+  //   }
+  // }, []);
+
+  async function getEvents() {
+    console.log("start", eventsPending, eventsConfirmed);
+    let first = await fetch(
+      `http://localhost:3000/events?timeStamp_gte=${startDay.valueOf()}&timeStamp_lte=${endDay.valueOf()}`
+    );
+    let res = await first.json();
+    console.log(res);
+    if (res.length > 0) {
+      res.forEach((item) => sortMonthEvents(item));
+    }
+  }
+
+  function sortMonthEvents(ev) {
+    if (ev.type === "pending") {
+      console.log("yeap 1", ev);
+
+      let events = [...eventsPending];
+      events.push(ev);
+      setEventsPending(events);
+      console.log(eventsPending);
+    } else if (ev.type === "confirmed") {
+      console.log("yeap2", ev);
+
+      let events = [...eventsConfirmed];
+      events.push(ev);
+      setEventsConfirmed(events);
+      console.log(eventsConfirmed);
+    }
+  }
+
+  useEffect(() => {
+    setEventsPending([]);
+    setEventsConfirmed([]);
+    getEvents();
+    console.log("STARTED");
+  }, [dateToRender]);
+
   return (
     <>
       <div className="DayPicker-Months">
@@ -99,6 +152,8 @@ function MonthCalendar(props) {
           <div className="DayPicker-Body">{renderWeeks(calendar)}</div>
         </div>
       </div>
+      <div>{eventsPending.length}</div>
+      {/* <div>{eventsConfirmed.length}</div> */}
     </>
   );
 }
