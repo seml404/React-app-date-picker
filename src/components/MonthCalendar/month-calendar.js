@@ -1,24 +1,19 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { connect } from "react-redux";
 import { toggleAddEventWidow } from "../../store/actions/index";
-import { DateTime } from "../../services/index";
+import { DateTime, getEvents, equalDate } from "../../services/index";
 
 function MonthCalendar(props) {
   let [eventsPending, setEventsPending] = useState([]);
   let [eventsConfirmed, setEventsConfirmed] = useState([]);
-  const { currentDate, monthsList, daysList, toggleAddEventWidow } = props;
-
-  // console.log(monthsList);
-  let { dateToRender } = props;
-
+  const { currentDate, daysList, toggleAddEventWidow, calendarUrl } = props;
+  let { dateToRender, eventsListAmendedCounter } = props;
   let startDay = dateToRender.startOf("month").startOf("week");
   let endDay = dateToRender.endOf("month").endOf("week");
-
   let calendar = [];
   for (let i = startDay; i <= endDay; i = i.plus({ days: 1 })) {
     calendar.push(i);
   }
-  // console.log(calendar);
   let weekCounter = calendar.length / 7;
 
   function renderDaysList(arr) {
@@ -42,21 +37,11 @@ function MonthCalendar(props) {
     return dayClass;
   }
 
-  function equalDate(day, comparedDate) {
-    return (
-      day.hasSame(comparedDate, "year") &&
-      day.hasSame(comparedDate, "month") &&
-      day.hasSame(comparedDate, "day")
-    );
-  }
-
   function handleDayClick(e, day) {
     e.stopPropagation();
     console.log(day);
-    toggleAddEventWidow();
+    toggleAddEventWidow(day.toMillis());
   }
-
-  // console.log(DateTime.fromMillis(1647185731000));
 
   function isBusy(neededDay, schedule) {
     if (
@@ -75,7 +60,7 @@ function MonthCalendar(props) {
         <div
           className={defineDayClass(arr[i])}
           key={arr[i].toString()}
-          onClick={(e, day) => handleDayClick(e, arr[i])}
+          onClick={(e) => handleDayClick(e, arr[i])}
         >
           <div className="DayWrapper">
             <div
@@ -88,12 +73,18 @@ function MonthCalendar(props) {
               {arr[i].day}
             </div>
             {isBusy(arr[i], eventsPending) && (
-              <div className="eventPending" style={{ color: "red" }}>
+              <div
+                className="eventPending"
+                style={{ backgroundColor: "green", color: "white" }}
+              >
                 p
               </div>
             )}
             {isBusy(arr[i], eventsConfirmed) && (
-              <div className="eventConfirmed" style={{ color: "blue" }}>
+              <div
+                className="eventConfirmed"
+                style={{ backgroundColor: "blue", color: "white" }}
+              >
                 c
               </div>
             )}
@@ -116,27 +107,13 @@ function MonthCalendar(props) {
     return arrOfWeeks;
   }
 
-  async function getEvents() {
-    console.log("start", eventsPending, eventsConfirmed);
-    let first = await fetch(
-      `http://localhost:3000/events?timeStamp_gte=${startDay.valueOf()}&timeStamp_lte=${endDay.valueOf()}`
-    );
-    let res = await first.json();
-    console.log(res);
-    if (res.length > 0) {
-      sortMonthEvents(res);
-    }
-  }
-
   function sortMonthEvents(res) {
     let pending = [];
     let confirmed = [];
     res.forEach((ev) => {
       if (ev.type === "pending") {
-        console.log("yeap 1", ev);
         pending.push(ev);
       } else if (ev.type === "confirmed") {
-        console.log("yeap2", ev);
         confirmed.push(ev);
       }
     });
@@ -147,9 +124,15 @@ function MonthCalendar(props) {
   useEffect(() => {
     setEventsPending([]);
     setEventsConfirmed([]);
-    getEvents();
-    console.log("STARTED");
-  }, [dateToRender]);
+    getEvents(
+      calendarUrl,
+      eventsPending,
+      eventsConfirmed,
+      startDay,
+      endDay,
+      sortMonthEvents
+    );
+  }, [dateToRender, eventsListAmendedCounter]);
 
   return (
     <>
@@ -159,8 +142,6 @@ function MonthCalendar(props) {
           <div className="DayPicker-Body">{renderWeeks(calendar)}</div>
         </div>
       </div>
-      <div>{eventsPending.length}</div>
-      <div>{eventsConfirmed.length}</div>
     </>
   );
 }
@@ -173,6 +154,8 @@ const mapStateToProps = (state) => {
     holidaysList: state.holidaysList,
     daysList: state.daysList,
     showAddEventWindow: state.showAddEventWindow,
+    calendarUrl: state.calendarUrl,
+    eventsListAmendedCounter: state.eventsListAmendedCounter,
   };
 };
 
